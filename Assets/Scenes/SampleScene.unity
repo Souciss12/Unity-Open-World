@@ -378,6 +378,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: FirstPersonController
       objectReference: {fileID: 0}
+    - target: {fileID: 949706277866706574, guid: 9dba256cdaca0b04bafe86b5f8a95cf3, type: 3}
+      propertyPath: jumpSpeed
+      value: 2.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 949706277866706574, guid: 9dba256cdaca0b04bafe86b5f8a95cf3, type: 3}
+      propertyPath: slideSpeed
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 949706277866706574, guid: 9dba256cdaca0b04bafe86b5f8a95cf3, type: 3}
+      propertyPath: mouseSensitivity
+      value: 15.1
+      objectReference: {fileID: 0}
     - target: {fileID: 4828754488830121221, guid: 9dba256cdaca0b04bafe86b5f8a95cf3, type: 3}
       propertyPath: m_LocalPosition.x
       value: 354.7

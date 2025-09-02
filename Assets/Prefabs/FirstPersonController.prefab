@@ -74,17 +74,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2922308556bc98e4898cb3309250e781, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mouseSensitivity: 8.9
+  mouseSensitivity: 15.1
   walkSpeed: 4.4
   sprintSpeed: 7
   crouchSpeed: 1.81
   crouchHeight: 1
   crouchCameraHeight: 1
-  slideSpeed: 8
+  slideSpeed: 10
   slideDuration: 0.7
   slideFovBoost: 5
   slideTiltAngle: 5
-  jumpSpeed: 4
+  jumpSpeed: 2.21
   gravity: 9.81
   coyoteTimeEnabled: 1
   coyoteTimeDuration: 0.2

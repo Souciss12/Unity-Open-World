@@ -50,6 +50,7 @@ namespace EasyPeasyFirstPersonController
         private float postSlideCrouchTimer;
         private Vector3 slideDirection;
         private float originalHeight;
+        private RaycastHit slopeHit;
         private float originalCameraParentHeight;
         private float coyoteTimer;
         private Camera cam;
@@ -57,6 +58,8 @@ namespace EasyPeasyFirstPersonController
         private float bobTimer;
         private float defaultPosY;
         private Vector3 recoil = Vector3.zero;
+        private bool isPostSlide = false;
+        private float postSlideSpeedTimer = 0f;
         private bool isLook = true, isMove = true;
         private float currentCameraHeight;
         private float currentBobOffset;
@@ -128,7 +131,7 @@ namespace EasyPeasyFirstPersonController
             bool hasCeiling = Physics.CapsuleCast(point1, point2, capsuleRadius, Vector3.up, castDistance, groundMask);
             if (isSliding)
             {
-                postSlideCrouchTimer = 0.3f;
+                postSlideCrouchTimer = 0.15f;
             }
             if (postSlideCrouchTimer > 0)
             {
@@ -155,10 +158,28 @@ namespace EasyPeasyFirstPersonController
                 if (slideTimer <= 0f || !isGrounded)
                 {
                     isSliding = false;
+                    isPostSlide = true;
+                    postSlideSpeedTimer = 0.3f;
                 }
                 float targetSlideSpeed = slideSpeed * Mathf.Lerp(0.7f, 1f, slideProgress);
-                currentSlideSpeed = Mathf.SmoothDamp(currentSlideSpeed, targetSlideSpeed, ref slideSpeedVelocity, 0.2f);
-                characterController.Move(slideDirection * currentSlideSpeed * Time.deltaTime);
+
+                if (OnSlope())
+                {
+                    float slopeAngle = Vector3.Angle(slopeHit.normal, Vector3.up);
+
+                    float slopeSpeedMultiplier = 1f + (slopeAngle / 90f);
+
+                    Vector3 slopeDirection = Vector3.ProjectOnPlane(slideDirection, slopeHit.normal).normalized;
+
+                    targetSlideSpeed *= slopeSpeedMultiplier;
+                    currentSlideSpeed = Mathf.SmoothDamp(currentSlideSpeed, targetSlideSpeed, ref slideSpeedVelocity, 0.1f);
+                    characterController.Move(slopeDirection * currentSlideSpeed * Time.deltaTime);
+                }
+                else
+                {
+                    currentSlideSpeed = Mathf.SmoothDamp(currentSlideSpeed, targetSlideSpeed, ref slideSpeedVelocity, 0.2f);
+                    characterController.Move(slideDirection * currentSlideSpeed * Time.deltaTime);
+                }
             }
 
             float targetHeight = isCrouching || isSliding ? crouchHeight : originalHeight;
@@ -225,9 +246,30 @@ namespace EasyPeasyFirstPersonController
         {
             moveInput.x = Input.GetAxis("Horizontal");
             moveInput.y = Input.GetAxis("Vertical");
+
+            if (isPostSlide)
+            {
+                postSlideSpeedTimer -= Time.deltaTime;
+                if (postSlideSpeedTimer <= 0)
+                {
+                    isPostSlide = false;
+                }
+            }
+
             isSprinting = canSprint && Input.GetKey(KeyCode.LeftShift) && moveInput.y > 0.1f && isGrounded && !isCrouching && !isSliding;
 
-            float currentSpeed = isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
+            float currentSpeed;
+            if (isPostSlide && moveInput.magnitude > 0.1f)
+            {
+                float blendFactor = 1 - (postSlideSpeedTimer / 0.3f);
+                float targetSpeed = isCrouching ? crouchSpeed : (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed);
+                currentSpeed = Mathf.Lerp(slideSpeed, targetSpeed, blendFactor);
+            }
+            else
+            {
+                currentSpeed = isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
+            }
+
             if (!isMove) currentSpeed = 0f;
 
             Vector3 direction = new Vector3(moveInput.x, 0f, moveInput.y);
@@ -277,6 +319,17 @@ namespace EasyPeasyFirstPersonController
         {
             Cursor.lockState = newVisibility ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = newVisibility;
+        }
+
+        private bool OnSlope()
+        {
+            if (!isGrounded) return false;
+            if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, groundDistance + 0.5f, groundMask))
+            {
+                float angle = Vector3.Angle(slopeHit.normal, Vector3.up);
+                return angle > 0 && angle < 60;
+            }
+            return false;
         }
     }
 }
